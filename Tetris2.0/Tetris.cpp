@@ -26,7 +26,6 @@ class MenuItems {
 public:
     Sprite nameGame, startGame, results, exit;
     Sprite recordCountSprite, lastCountSprite, backSprite;
-    Text recordCount, lastCount;
 };
 
 struct Point
@@ -54,146 +53,6 @@ bool check() {
     return 1;
 }
 
-void Game() {
-    srand(time(0));
-
-    RenderWindow window(VideoMode(N * w, M * w), "TETRIS");
-
-    Texture t;
-    t.loadFromFile("C:\\Users\\vladk\\Downloads\\tiles.png");
-    Sprite tiles(t);
-
-    int dx = 0, colorNum = 1;
-    bool rotate = false;
-    float timer = 0, delay = 0.3;
-    Clock clock;
-    bool ad = true;
-
-    while (window.isOpen())
-    {
-        float time = clock.getElapsedTime().asSeconds();
-        clock.restart();
-        timer += time;
-
-        Event event;
-        while (window.pollEvent(event))
-        {
-            if (event.type == Event::Closed)
-                window.close();
-
-            if (event.type == Event::KeyPressed)
-                if (event.key.code == Keyboard::Up)
-                    rotate = true;
-                else if (event.key.code == Keyboard::Right)
-                    dx = 1;
-                else if (event.key.code == Keyboard::Left)
-                    dx = -1;
-        }
-
-
-        if (Keyboard::isKeyPressed(Keyboard::Down))
-            delay = 0.05;
-
-        for (int i = 0; i < 4; i++) {
-            b[i] = a[i];
-            a[i].x += dx;
-        }
-
-        if (!check()) {
-            for (int i = 0; i < 4; i++)
-                a[i] = b[i];
-        }
-
-        if (rotate) {
-            Point p = a[1];
-            for (int i = 0; i < 4; i++) {
-                int x = a[i].y - p.y;
-                int y = a[i].x - p.x;
-
-                a[i].x = p.x - x;
-                a[i].y = p.y + y;
-            }
-
-            if (!check()) {
-                for (int i = 0; i < 4; i++)
-                    a[i] = b[i];
-            }
-        }
-
-        if (timer > delay) {
-            for (int i = 0; i < 4; i++) {
-                b[i] = a[i];
-                a[i].y += 1;
-            }
-
-            if (!check()) {
-                for (int i = 0; i < 4; i++)
-                    field[b[i].y][b[i].x] = colorNum;
-                colorNum = 1 + rand() % 7;
-                int n = rand() % 7;
-                for (int i = 0; i < 4; i++) {
-                    a[i].x = figures[n][i] % 2;
-                    a[i].y = figures[n][i] / 2;
-                }
-            }
-
-            timer = 0;
-        }
-
-        if (ad) {
-            int n = rand() % 7;
-            if (a[0].x == 0)
-                for (int i = 0; i < 4; i++) {
-                    a[i].x = figures[n][i] % 2;
-                    a[i].y = figures[n][i] / 2;
-                }
-            ad = false;
-        }
-
-        int k = M - 1;
-        for (int i = M - 1; i > 0; i--) {
-            int count = 0;
-            for (int j = 0; j < N; j++) {
-                if (field[i][j]) {
-                    count++;
-                }
-
-                field[k][j] = field[i][j];
-            }
-            if (count < N) {
-                k--;
-            }
-            else {
-                couter_points += 1;
-                cout << "Yes minus 3" << endl;
-            }
-
-        }
-
-        dx = 0;
-        rotate = false;
-        delay = 0.3;
-
-        window.clear(Color::White);
-
-        for (int i = 0; i < M; i++)
-            for (int j = 0; j < N; j++) {
-                if (field[i][j] == 0)
-                    continue;
-                tiles.setTextureRect(IntRect(field[i][j] * w, 0, w, w));
-                tiles.setPosition(j * w, i * w);
-                window.draw(tiles);
-            }
-
-        for (int i = 0; i < 4; i++) {
-            tiles.setTextureRect(IntRect(colorNum * w, 0, w, w));
-            tiles.setPosition(a[i].x * w, a[i].y * w);
-            window.draw(tiles);
-        }
-
-        window.display();
-    }
-}
 
 
 void UpdateData(int count = -1) {
@@ -212,10 +71,11 @@ void UpdateData(int count = -1) {
     if (count != -1) {
         ofstream fout("data.txt");
         last = count;
-        if (record < last) record = last;
+        if (record < last) { record = last; }
         fout << to_string(record) << " " << to_string(last);
 
         fout.close();
+        cout << "test";
     }
 }
 
@@ -251,10 +111,14 @@ int main()
 
 
     Text lastCount(to_string(last), font, 50);
+    
+    Text lastCount1(to_string(0), font, 50);
+    lastCount1.setPosition(N * w - 50, 0);
+
 
     recordCount.setFillColor(Color::Black);
     lastCount.setFillColor(Color::Black);
-
+    lastCount1.setFillColor(Color::Black);
 
     recordCount.setPosition(w * 7, w * 5 - 20);
     lastCount.setPosition(w * 7, w * 7 - 20);
@@ -421,11 +285,10 @@ int main()
                 couter_points = 0;
                 ad = false;
 
-
-                UpdateData(couter_points);
-                couter_points = 0;
+                state = 1;
             }
             
+            lastCount1.setString(to_string(couter_points));
 
             for (int i = 0; i < 4; i++) {
                 b[i] = a[i];
@@ -523,6 +386,9 @@ int main()
                 tiles.setPosition(a[i].x * w, a[i].y * w);
                 window.draw(tiles);
             }
+            
+            
+            window.draw(lastCount1);
             window.draw(mi.backSprite);
 
         }
